@@ -1,7 +1,7 @@
 {
   "appId": "com.maliutao.teacherapp",
   "appName": "课程助手",
-  "webDir": ".",
+  "webDir": "web",
   "server": {
     "androidScheme": "https"
   },
