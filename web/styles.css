@@ -461,29 +461,70 @@ select.form-input {
   flex: 1;
 }
 
-/* --- Time Picker --- */
+/* --- Time Picker (chip grid) --- */
 .time-picker {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tp-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tp-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  min-width: 18px;
+  padding-top: 6px;
+  text-align: center;
+}
+
+.tp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+.tp-grid-min {
   gap: 6px;
 }
 
-.time-picker .tp-hour,
-.time-picker .tp-minute {
-  flex: 1;
-  text-align: center;
+.tp-chip {
+  width: 38px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
   font-family: 'Space Mono', monospace;
-  font-size: 1rem;
-  padding: 10px 4px;
-  min-height: 44px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s;
+  flex-shrink: 0;
 }
 
-.time-picker .tp-colon {
-  font-family: 'Space Mono', monospace;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  flex-shrink: 0;
+.tp-chip:active {
+  transform: scale(0.93);
+}
+
+.tp-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+.tp-grid-min .tp-chip {
+  flex: 1;
+  width: auto;
 }
 
 /* --- Buttons --- */

@@ -185,13 +185,46 @@ function renderToday() {
   const weekEnd = getWeekEnd(todayDate);
   const weekLessons = getLessonsInRange(weekStart, weekEnd);
   let weekTotal = 0;
+  let weekPassed = 0;
+  let weekPassedTotal = 0;
+  const now = new Date();
+
   weekLessons.forEach(l => {
     const s = data.students.find(st => st.id === l.studentId);
-    if (s) weekTotal += s.price;
+    if (s) {
+      weekTotal += s.price;
+      // 判断是否已过：课程日期+结束时间 < 当前时间
+      const lessonEnd = new Date(l.date + 'T' + l.endTime + ':00');
+      if (lessonEnd < now) {
+        weekPassed++;
+        weekPassedTotal += s.price;
+      }
+    }
   });
 
-  // 进度条（以每周 20 节为基准）
-  const progress = Math.min(weekLessons.length / 20 * 100, 100);
+  // 本月数据
+  const monthStart = getMonthStart(todayDate);
+  const monthEnd = getMonthEnd(todayDate);
+  const monthLessons = getLessonsInRange(monthStart, monthEnd);
+  let monthTotal = 0;
+  let monthPassed = 0;
+  let monthPassedTotal = 0;
+
+  monthLessons.forEach(l => {
+    const s = data.students.find(st => st.id === l.studentId);
+    if (s) {
+      monthTotal += s.price;
+      const lessonEnd = new Date(l.date + 'T' + l.endTime + ':00');
+      if (lessonEnd < now) {
+        monthPassed++;
+        monthPassedTotal += s.price;
+      }
+    }
+  });
+
+  // 进度条
+  const weekProgress = weekLessons.length > 0 ? Math.min(weekPassed / weekLessons.length * 100, 100) : 0;
+  const monthProgress = monthLessons.length > 0 ? Math.min(monthPassed / monthLessons.length * 100, 100) : 0;
 
   let html = '';
 
@@ -249,11 +282,25 @@ function renderToday() {
     <div class="stats-bar">
       <div class="stats-title">本周概览</div>
       <div class="stats-row">
-        <span class="stats-number">已排 ${weekLessons.length} 节</span>
-        <span class="stats-number">预计 ${formatMoney(weekTotal)}</span>
+        <span class="stats-number">${weekPassed} / ${weekLessons.length} 节</span>
+        <span class="stats-number">${formatMoney(weekPassedTotal)} / ${formatMoney(weekTotal)}</span>
       </div>
       <div class="progress-bar">
-        <div class="progress-fill" style="width:${progress}%"></div>
+        <div class="progress-fill" style="width:${weekProgress}%"></div>
+      </div>
+    </div>
+  `;
+
+  // 本月概览
+  html += `
+    <div class="stats-bar">
+      <div class="stats-title">本月概览</div>
+      <div class="stats-row">
+        <span class="stats-number">${monthPassed} / ${monthLessons.length} 节</span>
+        <span class="stats-number">${formatMoney(monthPassedTotal)} / ${formatMoney(monthTotal)}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${monthProgress}%"></div>
       </div>
     </div>
   `;

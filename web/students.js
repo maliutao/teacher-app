@@ -81,31 +81,20 @@ function openStudentForm(studentId) {
       <button class="sheet-close" onclick="closeStudentForm()">✕</button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">姓名</label>
-      <input class="form-input" id="sf-name" type="text" placeholder="学生姓名" value="${name}" maxlength="20">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">姓名</label>
+        <input class="form-input" id="sf-name" type="text" placeholder="学生姓名" value="${name}" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label class="form-label">每节价格（元）</label>
+        <input class="form-input" id="sf-price" type="number" placeholder="200" value="${price}" min="0" inputmode="numeric">
+      </div>
     </div>
 
     <div class="form-group">
       <label class="form-label">上课地点</label>
       <input class="form-input" id="sf-location" type="text" placeholder="如：星巴克二楼、学生家里" value="${location}" maxlength="40">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">每节价格（元）</label>
-        <input class="form-input" id="sf-price" type="number" placeholder="200" value="${price}" min="0" inputmode="numeric">
-      </div>
-      <div class="form-group">
-        <label class="form-label">默认课时（分钟）</label>
-        <select class="form-input" id="sf-duration">
-          <option value="30"${duration === 30 ? ' selected' : ''}>30 分钟</option>
-          <option value="45"${duration === 45 ? ' selected' : ''}>45 分钟</option>
-          <option value="60"${duration === 60 ? ' selected' : ''}>60 分钟</option>
-          <option value="90"${duration === 90 ? ' selected' : ''}>90 分钟</option>
-          <option value="120"${duration === 120 ? ' selected' : ''}>120 分钟</option>
-        </select>
-      </div>
     </div>
 
     <div class="form-group">
@@ -152,7 +141,6 @@ function saveStudent() {
   const name = document.getElementById('sf-name').value.trim();
   const location = document.getElementById('sf-location').value.trim();
   const price = parseInt(document.getElementById('sf-price').value);
-  const duration = parseInt(document.getElementById('sf-duration').value);
   const color = getSelectedColor();
 
   // 验证
@@ -169,7 +157,7 @@ function saveStudent() {
     return;
   }
 
-  const studentData = { name, location, price, duration, color };
+  const studentData = { name, location, price, duration: 120, color };
 
   if (editingStudentId) {
     updateStudent(editingStudentId, studentData);

@@ -4,30 +4,71 @@ let scheduleMode = 'repeat'; // 'repeat' | 'single'
 let selectedWeekdays = [];   // [1,3,5] = 周一、周三、周五 (1-7, 周一=1)
 let scheduleStudentId = '';
 
-// 自定义时间选择器 HTML（小时 0-23 + 分钟 00/15/30/45）
-function renderTimePicker(id, value, onChangeFn) {
+// 自定义时间选择器 — 按钮网格（小时 07-21 + 分钟 00/15/30/45）
+function renderTimePicker(id, value, autoEndId) {
   const [h, m] = value.split(':').map(Number);
-  let hourOpts = '';
-  for (let i = 0; i < 24; i++) {
-    hourOpts += `<option value="${i}"${i === h ? ' selected' : ''}>${String(i).padStart(2, '0')}</option>`;
+
+  // 小时 chip（07-21，每行 5 个）
+  let hourChips = '';
+  for (let i = 7; i <= 21; i++) {
+    const active = i === h ? ' active' : '';
+    hourChips += `<button type="button" class="tp-chip${active}" data-val="${i}" onclick="selectTimeChip(this)">${String(i).padStart(2, '0')}</button>`;
   }
+
+  // 分钟 chip（00/15/30/45）
   const mins = [0, 15, 30, 45];
-  let minOpts = '';
+  let minChips = '';
   mins.forEach(mi => {
-    minOpts += `<option value="${mi}"${mi === m ? ' selected' : ''}>${String(mi).padStart(2, '0')}</option>`;
+    const active = mi === m ? ' active' : '';
+    minChips += `<button type="button" class="tp-chip${active}" data-val="${mi}" onclick="selectTimeChip(this)">${String(mi).padStart(2, '0')}</button>`;
   });
-  return `<div class="time-picker" id="${id}">
-    <select class="form-input tp-hour" onchange="${onChangeFn}">${hourOpts}</select>
-    <span class="tp-colon">:</span>
-    <select class="form-input tp-minute" onchange="${onChangeFn}">${minOpts}</select>
+
+  const autoAttr = autoEndId ? ` data-auto-end="${autoEndId}"` : '';
+
+  return `<div class="time-picker" id="${id}" data-hour="${h}" data-minute="${m}"${autoAttr}>
+    <div class="tp-section">
+      <div class="tp-label">时</div>
+      <div class="tp-grid">${hourChips}</div>
+    </div>
+    <div class="tp-section">
+      <div class="tp-label">分</div>
+      <div class="tp-grid tp-grid-min">${minChips}</div>
+    </div>
   </div>`;
+}
+
+function selectTimeChip(btn) {
+  const picker = btn.closest('.time-picker');
+  if (!picker) return;
+
+  // 更新同组 chip 状态
+  btn.parentElement.querySelectorAll('.tp-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+
+  // 更新 data 属性
+  const val = parseInt(btn.dataset.val);
+  const isHour = btn.closest('.tp-section') === picker.querySelector('.tp-section');
+  if (isHour) {
+    picker.dataset.hour = val;
+  } else {
+    picker.dataset.minute = val;
+  }
+
+  // 如果是开始时间选择器，自动更新结束时间
+  if (picker.dataset.autoEnd && isHour) {
+    const startVal = getTimePickerValue(picker.id);
+    setTimePickerValue(picker.dataset.autoEnd, addMinutes(startVal, 120));
+  }
+
+  // 更新预览
+  updateSchedulePreview();
 }
 
 function getTimePickerValue(id) {
   const el = document.getElementById(id);
   if (!el) return '';
-  const h = el.querySelector('.tp-hour').value;
-  const m = el.querySelector('.tp-minute').value;
+  const h = parseInt(el.dataset.hour || 0);
+  const m = parseInt(el.dataset.minute || 0);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
@@ -35,8 +76,19 @@ function setTimePickerValue(id, timeStr) {
   const el = document.getElementById(id);
   if (!el) return;
   const [h, m] = timeStr.split(':').map(Number);
-  el.querySelector('.tp-hour').value = h;
-  el.querySelector('.tp-minute').value = m;
+  el.dataset.hour = h;
+  el.dataset.minute = m;
+  // 更新小时 chip（第一个 tp-section 内）
+  const sections = el.querySelectorAll('.tp-section');
+  if (sections[0]) {
+    sections[0].querySelectorAll('.tp-chip').forEach(c => {
+      c.classList.toggle('active', parseInt(c.dataset.val) === h);
+    });
+  }
+  // 更新分钟 chip（tp-grid-min 内）
+  el.querySelectorAll('.tp-grid-min .tp-chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.val) === m);
+  });
 }
 
 function renderSchedulePanel() {
@@ -112,11 +164,11 @@ function renderSchedulePanel() {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">开始时间</label>
-          ${renderTimePicker('sched-start', defaultStart, "onScheduleStartTimeChange('sched-start','sched-end')")}
+          ${renderTimePicker('sched-start', defaultStart, 'sched-end')}
         </div>
         <div class="form-group">
           <label class="form-label">结束时间</label>
-          ${renderTimePicker('sched-end', defaultEnd, 'updateSchedulePreview()')}
+          ${renderTimePicker('sched-end', defaultEnd, null)}
         </div>
       </div>
 
@@ -147,11 +199,11 @@ function renderSchedulePanel() {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">开始时间</label>
-          ${renderTimePicker('sched-single-start', defaultStart, "onScheduleStartTimeChange('sched-single-start','sched-single-end')")}
+          ${renderTimePicker('sched-single-start', defaultStart, 'sched-single-end')}
         </div>
         <div class="form-group">
           <label class="form-label">结束时间</label>
-          ${renderTimePicker('sched-single-end', defaultEnd, 'updateSchedulePreview()')}
+          ${renderTimePicker('sched-single-end', defaultEnd, null)}
         </div>
       </div>
 
@@ -191,15 +243,6 @@ function toggleWeekday(day, btn) {
 function selectScheduleStudent(studentId) {
   scheduleStudentId = (scheduleStudentId === studentId) ? '' : studentId;
   renderSchedulePanel(); // 重新渲染以更新 chip 高亮
-}
-
-// 开始时间变化时，自动设置结束时间 = 开始 + 2 小时
-function onScheduleStartTimeChange(startId, endId) {
-  const startVal = getTimePickerValue(startId);
-  if (startVal) {
-    setTimePickerValue(endId, addMinutes(startVal, 120));
-  }
-  updateSchedulePreview();
 }
 function updateSchedulePreview() {
   if (scheduleMode !== 'repeat') return;
