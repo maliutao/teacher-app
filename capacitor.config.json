@@ -1,0 +1,13 @@
+{
+  "appId": "com.maliutao.teacherapp",
+  "appName": "课程助手",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

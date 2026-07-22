@@ -16,3 +16,10 @@ package-lock.json
 # Python
 __pycache__/
 *.pyc
+
+# Capacitor / Android build
+android/
+
+# APK output
+*.apk
+*.aab

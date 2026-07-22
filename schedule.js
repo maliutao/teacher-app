@@ -4,6 +4,41 @@ let scheduleMode = 'repeat'; // 'repeat' | 'single'
 let selectedWeekdays = [];   // [1,3,5] = 周一、周三、周五 (1-7, 周一=1)
 let scheduleStudentId = '';
 
+// 自定义时间选择器 HTML（小时 0-23 + 分钟 00/15/30/45）
+function renderTimePicker(id, value, onChangeFn) {
+  const [h, m] = value.split(':').map(Number);
+  let hourOpts = '';
+  for (let i = 0; i < 24; i++) {
+    hourOpts += `<option value="${i}"${i === h ? ' selected' : ''}>${String(i).padStart(2, '0')}</option>`;
+  }
+  const mins = [0, 15, 30, 45];
+  let minOpts = '';
+  mins.forEach(mi => {
+    minOpts += `<option value="${mi}"${mi === m ? ' selected' : ''}>${String(mi).padStart(2, '0')}</option>`;
+  });
+  return `<div class="time-picker" id="${id}">
+    <select class="form-input tp-hour" onchange="${onChangeFn}">${hourOpts}</select>
+    <span class="tp-colon">:</span>
+    <select class="form-input tp-minute" onchange="${onChangeFn}">${minOpts}</select>
+  </div>`;
+}
+
+function getTimePickerValue(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  const h = el.querySelector('.tp-hour').value;
+  const m = el.querySelector('.tp-minute').value;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function setTimePickerValue(id, timeStr) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const [h, m] = timeStr.split(':').map(Number);
+  el.querySelector('.tp-hour').value = h;
+  el.querySelector('.tp-minute').value = m;
+}
+
 function renderSchedulePanel() {
   selectedWeekdays = []; // 每次打开面板重置
   const panel = document.getElementById('schedule-panel');
@@ -77,11 +112,11 @@ function renderSchedulePanel() {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">开始时间</label>
-          <input class="form-input" id="sched-start" type="time" value="${defaultStart}" step="900" onchange="onScheduleStartTimeChange('sched-start','sched-end')">
+          ${renderTimePicker('sched-start', defaultStart, "onScheduleStartTimeChange('sched-start','sched-end')")}
         </div>
         <div class="form-group">
           <label class="form-label">结束时间</label>
-          <input class="form-input" id="sched-end" type="time" value="${defaultEnd}" step="900" onchange="updateSchedulePreview()">
+          ${renderTimePicker('sched-end', defaultEnd, 'updateSchedulePreview()')}
         </div>
       </div>
 
@@ -112,11 +147,11 @@ function renderSchedulePanel() {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">开始时间</label>
-          <input class="form-input" id="sched-single-start" type="time" value="${defaultStart}" step="900" onchange="onScheduleStartTimeChange('sched-single-start','sched-single-end')">
+          ${renderTimePicker('sched-single-start', defaultStart, "onScheduleStartTimeChange('sched-single-start','sched-single-end')")}
         </div>
         <div class="form-group">
           <label class="form-label">结束时间</label>
-          <input class="form-input" id="sched-single-end" type="time" value="${defaultEnd}" step="900" onchange="updateSchedulePreview()">
+          ${renderTimePicker('sched-single-end', defaultEnd, 'updateSchedulePreview()')}
         </div>
       </div>
 
@@ -160,10 +195,9 @@ function selectScheduleStudent(studentId) {
 
 // 开始时间变化时，自动设置结束时间 = 开始 + 2 小时
 function onScheduleStartTimeChange(startId, endId) {
-  const startInput = document.getElementById(startId);
-  const endInput = document.getElementById(endId);
-  if (startInput && endInput && startInput.value) {
-    endInput.value = addMinutes(startInput.value, 120);
+  const startVal = getTimePickerValue(startId);
+  if (startVal) {
+    setTimePickerValue(endId, addMinutes(startVal, 120));
   }
   updateSchedulePreview();
 }
@@ -181,8 +215,8 @@ function updateSchedulePreview() {
 
   const rangeStart = document.getElementById('sched-range-start')?.value;
   const rangeEnd = document.getElementById('sched-range-end')?.value;
-  const startTime = document.getElementById('sched-start')?.value;
-  const endTime = document.getElementById('sched-end')?.value;
+  const startTime = getTimePickerValue('sched-start');
+  const endTime = getTimePickerValue('sched-end');
 
   if (!rangeStart || !rangeEnd || !startTime || !endTime) {
     previewEl.style.display = 'none';
@@ -248,8 +282,8 @@ function detectConflicts(newLessons, existingLessons) {
 
 function submitRepeatSchedule() {
   const studentId = scheduleStudentId;
-  const startTime = document.getElementById('sched-start').value;
-  const endTime = document.getElementById('sched-end').value;
+  const startTime = getTimePickerValue('sched-start');
+  const endTime = getTimePickerValue('sched-end');
   const rangeStart = document.getElementById('sched-range-start').value;
   const rangeEnd = document.getElementById('sched-range-end').value;
 
@@ -309,8 +343,8 @@ function submitRepeatSchedule() {
 function submitSingleSchedule() {
   const studentId = scheduleStudentId;
   const date = document.getElementById('sched-single-date').value;
-  const startTime = document.getElementById('sched-single-start').value;
-  const endTime = document.getElementById('sched-single-end').value;
+  const startTime = getTimePickerValue('sched-single-start');
+  const endTime = getTimePickerValue('sched-single-end');
 
   if (!studentId) {
     showToast('请选择学生', 'error');

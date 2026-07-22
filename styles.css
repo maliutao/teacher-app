@@ -461,6 +461,31 @@ select.form-input {
   flex: 1;
 }
 
+/* --- Time Picker --- */
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-picker .tp-hour,
+.time-picker .tp-minute {
+  flex: 1;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 1rem;
+  padding: 10px 4px;
+  min-height: 44px;
+}
+
+.time-picker .tp-colon {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
 /* --- Buttons --- */
 .btn {
   display: inline-flex;
@@ -1215,15 +1240,11 @@ select.form-input {
 /* --- Student Chip Row --- */
 .chip-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.chip-row::-webkit-scrollbar {
-  display: none;
+  padding-bottom: 4px;
+  max-height: 84px; /* 最多 2 行（36px × 2 + 8px gap + 4px padding） */
+  overflow: hidden;
 }
 
 .chip {
